@@ -1,0 +1,15 @@
+# No key files: dbt uses your gcloud application-default credentials and
+# impersonates the dbt-runner service account. See .env.example.
+governed_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      impersonate_service_account: "{{ env_var('DBT_IMPERSONATE_SA') }}"
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      dataset: "{{ env_var('BQ_DATASET') }}"
+      location: US
+      threads: 4
+      job_execution_timeout_seconds: 300
+      maximum_bytes_billed: 2000000000

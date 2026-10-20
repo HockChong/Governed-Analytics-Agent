@@ -3,13 +3,17 @@ name = "governed-analytics-agent"
 version = "0.1.0"
 description = "Governed text-to-SQL analytics agent over BigQuery thelook_ecommerce"
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+    "dbt-bigquery>=1.12.1",
+    "dbt-metricflow[dbt-bigquery]>=0.15.0",
+]
 
 [dependency-groups]
 dev = [
     "mypy",
     "pytest",
     "ruff",
+    "types-pyyaml>=6.0.12.20260906",
 ]
 
 [tool.uv]
