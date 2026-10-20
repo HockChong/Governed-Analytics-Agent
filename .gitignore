@@ -1,0 +1,22 @@
+# Secrets: never commit. Use impersonation instead of key files.
+.env
+*.env
+!.env.example
+*-key.json
+*credentials*.json
+service-account*.json
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+target/
+logs/
