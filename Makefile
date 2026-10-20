@@ -1,15 +1,19 @@
 -include .env
 export
 
+PYTHONPATH := src
 DBT_DIRS = --project-dir dbt --profiles-dir dbt
 
-.PHONY: install test lint format dbt-debug dbt-parse
+.PHONY: install test test-integration lint format up down migrate dbt-debug dbt-parse dbt-build
 
 install:
 	uv sync
 
 test:
 	uv run pytest
+
+test-integration:
+	uv run pytest -m integration
 
 format:
 	uv run ruff format .
@@ -20,8 +24,20 @@ lint:
 	uv run ruff format --check .
 	uv run mypy src tests
 
+up:
+	docker compose up -d --wait
+
+down:
+	docker compose down
+
+migrate:
+	uv run python -m core.migrations
+
 dbt-debug:
 	uv run dbt debug $(DBT_DIRS)
 
 dbt-parse:
 	uv run dbt parse $(DBT_DIRS)
+
+dbt-build:
+	uv run dbt build $(DBT_DIRS)

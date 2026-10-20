@@ -7,6 +7,9 @@ dependencies = [
     "dbt-bigquery>=1.12.1",
     "dbt-metricflow[dbt-bigquery]>=0.15.0",
     "google-cloud-bigquery>=3.46.2",
+    "psycopg[binary]>=3.3.6",
+    "pydantic>=2.14.1",
+    "pydantic-settings>=2.16.1",
 ]
 
 [dependency-groups]
@@ -24,7 +27,7 @@ package = false
 testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [
-    "integration: needs live GCP credentials; skipped when they are absent",
+    "integration: needs live GCP credentials or local Postgres; skipped when absent",
 ]
 
 [tool.ruff]
@@ -44,3 +47,5 @@ python_version = "3.12"
 strict = true
 mypy_path = "src"
 explicit_package_bases = true
+# Understands BaseSettings: fields may come from env vars, not __init__ args.
+plugins = ["pydantic.mypy"]
