@@ -718,6 +718,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "dbt-bigquery" },
     { name = "dbt-metricflow", extra = ["dbt-bigquery"] },
+    { name = "google-cloud-bigquery" },
 ]
 
 [package.dev-dependencies]
@@ -732,6 +733,7 @@ dev = [
 requires-dist = [
     { name = "dbt-bigquery", specifier = ">=1.12.1" },
     { name = "dbt-metricflow", extras = ["dbt-bigquery"], specifier = ">=0.15.0" },
+    { name = "google-cloud-bigquery", specifier = ">=3.46.2" },
 ]
 
 [package.metadata.requires-dev]

@@ -6,6 +6,7 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "dbt-bigquery>=1.12.1",
     "dbt-metricflow[dbt-bigquery]>=0.15.0",
+    "google-cloud-bigquery>=3.46.2",
 ]
 
 [dependency-groups]
