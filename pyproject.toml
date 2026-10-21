@@ -16,6 +16,7 @@ dependencies = [
 dev = [
     "mypy",
     "pytest",
+    "pyyaml>=6.0.3",
     "ruff",
     "types-pyyaml>=6.0.12.20260906",
 ]

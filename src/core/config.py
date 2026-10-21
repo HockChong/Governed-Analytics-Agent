@@ -9,6 +9,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    """Every runtime setting; field NAME maps to environment variable NAME."""
+
     # Empty values in .env (e.g. EVAL_REFERENCE_DATE=) mean "unset", not "".
     model_config = SettingsConfigDict(env_ignore_empty=True)
 
@@ -54,6 +56,7 @@ class Settings(BaseSettings):
         return self
 
     def postgres_conninfo(self, dbname: str | None = None) -> str:
+        """Return a libpq connection string; `dbname` overrides POSTGRES_DB."""
         password = self.postgres_password.get_secret_value() if self.postgres_password else None
         return make_conninfo(
             host=self.postgres_host,

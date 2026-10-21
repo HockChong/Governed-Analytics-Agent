@@ -30,7 +30,7 @@ def agent_client(settings: Settings) -> bigquery.Client:
 def test_agent_can_read_public_dataset(agent_client: bigquery.Client) -> None:
     # Positive control: proves the denial below is about permissions, not broken auth.
     job = agent_client.query(
-        "SELECT order_id FROM `bigquery-public-data.thelook_ecommerce.orders` LIMIT 1",
+        "select order_id from `bigquery-public-data.thelook_ecommerce.orders` limit 1",
         job_config=bigquery.QueryJobConfig(dry_run=True, use_query_cache=False),
     )
     assert job.total_bytes_processed is not None
@@ -39,4 +39,4 @@ def test_agent_can_read_public_dataset(agent_client: bigquery.Client) -> None:
 def test_agent_cannot_create_table(agent_client: bigquery.Client, settings: Settings) -> None:
     table = f"{settings.bq_dataset}.readonly_probe_{uuid.uuid4().hex[:8]}"
     with pytest.raises(Forbidden, match="bigquery.tables.create"):
-        agent_client.query(f"CREATE TABLE {table} AS SELECT 1 AS x").result()  # noqa: S608
+        agent_client.query(f"create table {table} as select 1 as x").result()  # noqa: S608

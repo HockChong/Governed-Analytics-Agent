@@ -32,16 +32,16 @@ def apply_migrations(conn: psycopg.Connection, directory: Path = MIGRATIONS_DIR)
     """Apply pending migrations, each in its own transaction. Returns the names applied."""
     with conn.transaction():
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS schema_migration ("
-            " name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())"
+            "create table if not exists schema_migration ("
+            " name text primary key, applied_at timestamptz not null default now())"
         )
-    applied = {row[0] for row in conn.execute("SELECT name FROM schema_migration")}
+    applied = {row[0] for row in conn.execute("select name from schema_migration")}
     newly_applied: list[str] = []
     for path in discover(directory):
         if path.name in applied:
             continue
         with conn.transaction():
             conn.execute(path.read_text(encoding="utf-8").encode())
-            conn.execute("INSERT INTO schema_migration (name) VALUES (%s)", (path.name,))
+            conn.execute("insert into schema_migration (name) values (%s)", (path.name,))
         newly_applied.append(path.name)
     return newly_applied

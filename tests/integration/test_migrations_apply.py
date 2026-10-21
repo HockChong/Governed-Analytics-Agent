@@ -23,23 +23,23 @@ def empty_db(settings: Settings) -> Iterator[psycopg.Connection]:
         pytest.skip("POSTGRES_PASSWORD not set")
     name = f"migration_test_{uuid.uuid4().hex[:8]}"
     with psycopg.connect(settings.postgres_conninfo(), autocommit=True) as admin:
-        admin.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name)))
+        admin.execute(sql.SQL("create database {}").format(sql.Identifier(name)))
         try:
             with psycopg.connect(settings.postgres_conninfo(name), autocommit=True) as conn:
                 yield conn
         finally:
-            admin.execute(sql.SQL("DROP DATABASE {}").format(sql.Identifier(name)))
+            admin.execute(sql.SQL("drop database {}").format(sql.Identifier(name)))
 
 
-def test_apply_to_empty_db_then_noop(empty_db: psycopg.Connection) -> None:
+def test_apply_migrations_creates_tables_then_is_a_noop(empty_db: psycopg.Connection) -> None:
     applied = apply_migrations(empty_db)
-    assert applied == [p.name for p in discover()]
+    assert applied == [path.name for path in discover()]
     assert apply_migrations(empty_db) == []
 
     tables = {
         row[0]
         for row in empty_db.execute(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
+            "select table_name from information_schema.tables where table_schema = 'public'"
         )
     }
     assert {"audit_log", "eval_run", "schema_migration"} <= tables
@@ -49,6 +49,6 @@ def test_audit_log_rejects_unknown_exit_code(empty_db: psycopg.Connection) -> No
     apply_migrations(empty_db)
     with pytest.raises(psycopg.errors.CheckViolation):
         empty_db.execute(
-            "INSERT INTO audit_log (request_id, user_id, role, question, exit_code)"
-            " VALUES (gen_random_uuid(), 'u', 'r', 'q', 'bogus')"
+            "insert into audit_log (request_id, user_id, role, question, exit_code)"
+            " values (gen_random_uuid(), 'u', 'r', 'q', 'bogus')"
         )

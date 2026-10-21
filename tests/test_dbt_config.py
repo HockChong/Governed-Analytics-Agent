@@ -22,18 +22,18 @@ def _documented_env_vars() -> set[str]:
     return {line.split("=", 1)[0] for line in lines if "=" in line and not line.startswith("#")}
 
 
-def test_profile_uses_impersonation_not_key_files() -> None:
+def test_dbt_profile_uses_impersonation_not_key_files() -> None:
     output = _dev_output()
     assert output["method"] == "oauth"
     assert "DBT_IMPERSONATE_SA" in output["impersonate_service_account"]
     assert not KEY_FILE_FIELDS & output.keys()
 
 
-def test_profile_caps_bytes_billed() -> None:
+def test_dbt_profile_caps_bytes_billed() -> None:
     assert 0 < _dev_output()["maximum_bytes_billed"] <= 2_000_000_000
 
 
-def test_every_dbt_env_var_is_documented() -> None:
+def test_env_example_documents_every_dbt_env_var() -> None:
     used = {
         name
         for path in DBT_DIR.rglob("*.yml")
