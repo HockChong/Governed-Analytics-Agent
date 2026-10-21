@@ -4,7 +4,7 @@ export
 PYTHONPATH := src
 DBT_DIRS = --project-dir dbt --profiles-dir dbt
 
-.PHONY: install test test-integration lint format up down migrate snapshot dbt-debug dbt-parse dbt-build
+.PHONY: install test test-integration lint format up down migrate snapshot profile dbt-debug dbt-parse dbt-build
 
 install:
 	uv sync
@@ -37,6 +37,10 @@ migrate:
 # One-off copy of thelook_ecommerce. `make snapshot FORCE=1` overwrites an existing one.
 snapshot:
 	uv run python scripts/snapshot.py $(if $(FORCE),--force,)
+
+# Profiles snapshot tables into docs/data-profile.md (estimate: under 1 GB scanned).
+profile:
+	uv run python scripts/profile_snapshot.py
 
 dbt-debug:
 	uv run dbt debug $(DBT_DIRS)

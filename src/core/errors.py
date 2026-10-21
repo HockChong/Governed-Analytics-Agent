@@ -11,3 +11,7 @@ class SnapshotError(GovernedAnalyticsError):
 
 class MigrationError(GovernedAnalyticsError):
     """The migrations directory is malformed."""
+
+
+class ProfileError(GovernedAnalyticsError):
+    """Declared source columns disagree with the warehouse, or an identifier is unsafe."""
