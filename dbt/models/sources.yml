@@ -2,16 +2,191 @@ version: 2
 
 # Reads the frozen snapshot made by scripts/snapshot.py, not the live public
 # dataset, which is regenerated over time.
-# Columns (and their pii: true tags) are added when staging models are built.
+# PII rule (docs/progress.md): postal codes, street addresses, names, emails,
+# IPs and point locations are PII; city, state and country are not.
+# PII columns are dropped in staging, so they never reach models the agent reads.
 sources:
   - name: thelook
     database: "{{ env_var('GCP_PROJECT_ID') }}"
     schema: "{{ env_var('SNAPSHOT_DATASET') }}"
     tables:
       - name: distribution_centers
+        columns:
+          - name: id
+            data_type: int64
+          - name: name
+            data_type: string
+          - name: latitude
+            data_type: float64
+          - name: longitude
+            data_type: float64
+          - name: distribution_center_geom
+            data_type: geography
+
       - name: events
+        columns:
+          - name: id
+            data_type: int64
+          - name: user_id
+            data_type: int64
+          - name: sequence_number
+            data_type: int64
+          - name: session_id
+            data_type: string
+          - name: created_at
+            data_type: timestamp
+          - name: ip_address
+            data_type: string
+            config: {meta: {pii: true}}
+          - name: city
+            data_type: string
+          - name: state
+            data_type: string
+          - name: postal_code
+            data_type: string
+            config: {meta: {pii: true}}
+          - name: browser
+            data_type: string
+          - name: traffic_source
+            data_type: string
+          - name: uri
+            data_type: string
+          - name: event_type
+            data_type: string
+
       - name: inventory_items
+        columns:
+          - name: id
+            data_type: int64
+          - name: product_id
+            data_type: int64
+          - name: created_at
+            data_type: timestamp
+          - name: sold_at
+            data_type: timestamp
+          - name: cost
+            data_type: float64
+          - name: product_category
+            data_type: string
+          - name: product_name
+            data_type: string
+          - name: product_brand
+            data_type: string
+          - name: product_retail_price
+            data_type: float64
+          - name: product_department
+            data_type: string
+          - name: product_sku
+            data_type: string
+          - name: product_distribution_center_id
+            data_type: int64
+
       - name: order_items
+        columns:
+          - name: id
+            data_type: int64
+          - name: order_id
+            data_type: int64
+          - name: user_id
+            data_type: int64
+          - name: product_id
+            data_type: int64
+          - name: inventory_item_id
+            data_type: int64
+          - name: status
+            data_type: string
+          - name: created_at
+            data_type: timestamp
+          - name: shipped_at
+            data_type: timestamp
+          - name: delivered_at
+            data_type: timestamp
+          - name: returned_at
+            data_type: timestamp
+          - name: sale_price
+            data_type: float64
+
       - name: orders
+        columns:
+          - name: order_id
+            data_type: int64
+          - name: user_id
+            data_type: int64
+          - name: status
+            data_type: string
+          - name: gender
+            data_type: string
+          - name: created_at
+            data_type: timestamp
+          - name: returned_at
+            data_type: timestamp
+          - name: shipped_at
+            data_type: timestamp
+          - name: delivered_at
+            data_type: timestamp
+          - name: num_of_item
+            data_type: int64
+
       - name: products
+        columns:
+          - name: id
+            data_type: int64
+          - name: cost
+            data_type: float64
+          - name: category
+            data_type: string
+          - name: name
+            data_type: string
+          - name: brand
+            data_type: string
+          - name: retail_price
+            data_type: float64
+          - name: department
+            data_type: string
+          - name: sku
+            data_type: string
+          - name: distribution_center_id
+            data_type: int64
+
       - name: users
+        columns:
+          - name: id
+            data_type: int64
+          - name: first_name
+            data_type: string
+            config: {meta: {pii: true}}
+          - name: last_name
+            data_type: string
+            config: {meta: {pii: true}}
+          - name: email
+            data_type: string
+            config: {meta: {pii: true}}
+          - name: age
+            data_type: int64
+          - name: gender
+            data_type: string
+          - name: state
+            data_type: string
+          - name: street_address
+            data_type: string
+            config: {meta: {pii: true}}
+          - name: postal_code
+            data_type: string
+            config: {meta: {pii: true}}
+          - name: city
+            data_type: string
+          - name: country
+            data_type: string
+          - name: latitude
+            data_type: float64
+            config: {meta: {pii: true}}
+          - name: longitude
+            data_type: float64
+            config: {meta: {pii: true}}
+          - name: traffic_source
+            data_type: string
+          - name: created_at
+            data_type: timestamp
+          - name: user_geom
+            data_type: geography
+            config: {meta: {pii: true}}
