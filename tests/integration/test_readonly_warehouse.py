@@ -6,34 +6,25 @@ application-default credentials exist; otherwise skipped (e.g. in CI).
 
 import uuid
 
-import google.auth
 import pytest
 from google.api_core.exceptions import Forbidden
-from google.auth import impersonated_credentials
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import bigquery
 
 from core.config import Settings
+from tools.bq import impersonated_client
 
 pytestmark = pytest.mark.bq
-
-SCOPES = ["https://www.googleapis.com/auth/bigquery"]
 
 
 @pytest.fixture(scope="module")
 def agent_client(settings: Settings) -> bigquery.Client:
-    project = settings.gcp_project_id
-    target = settings.agent_impersonate_sa
-    if target is None:
+    if settings.agent_impersonate_sa is None:
         pytest.skip("AGENT_IMPERSONATE_SA not set")
     try:
-        source, _ = google.auth.default(scopes=SCOPES)
+        return impersonated_client(settings.gcp_project_id, settings.agent_impersonate_sa)
     except DefaultCredentialsError:
         pytest.skip("no application-default credentials")
-    credentials = impersonated_credentials.Credentials(  # type: ignore[no-untyped-call]
-        source_credentials=source, target_principal=target, target_scopes=SCOPES
-    )
-    return bigquery.Client(project=project, credentials=credentials, location="US")
 
 
 def test_agent_can_read_public_dataset(agent_client: bigquery.Client) -> None:

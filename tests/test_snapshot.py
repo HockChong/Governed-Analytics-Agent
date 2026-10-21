@@ -6,11 +6,11 @@ import pytest
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
 
+from core.errors import SnapshotError
 from ingestion.snapshot import (
     METADATA_TABLE,
     SOURCE_DATASET,
     TABLES,
-    SnapshotError,
     snapshot,
 )
 

@@ -1,6 +1,6 @@
 """Apply plain-SQL migrations in migrations/ in filename order, each at most once.
 
-Usage: python -m core.migrations   (PYTHONPATH=src; `make migrate` sets it)
+Run via `make migrate` (scripts/migrate.py).
 """
 
 import re
@@ -8,7 +8,7 @@ from pathlib import Path
 
 import psycopg
 
-from core.config import Settings
+from core.errors import MigrationError
 
 MIGRATIONS_DIR = Path(__file__).resolve().parents[2] / "migrations"
 _NAME = re.compile(r"^(\d{3})_[a-z0-9_]+\.sql$")
@@ -21,9 +21,9 @@ def discover(directory: Path = MIGRATIONS_DIR) -> list[Path]:
     for path in files:
         match = _NAME.match(path.name)
         if not match:
-            raise ValueError(f"migration name must look like 001_name.sql: {path.name}")
+            raise MigrationError(f"migration name must look like 001_name.sql: {path.name}")
         if match.group(1) in versions:
-            raise ValueError(f"duplicate migration version {match.group(1)}")
+            raise MigrationError(f"duplicate migration version {match.group(1)}")
         versions.add(match.group(1))
     return files
 
@@ -45,14 +45,3 @@ def apply_migrations(conn: psycopg.Connection, directory: Path = MIGRATIONS_DIR)
             conn.execute("INSERT INTO schema_migration (name) VALUES (%s)", (path.name,))
         newly_applied.append(path.name)
     return newly_applied
-
-
-def main() -> None:
-    settings = Settings()
-    with psycopg.connect(settings.postgres_conninfo(), autocommit=True) as conn:
-        names = apply_migrations(conn)
-    print(f"applied {len(names)} migration(s): {', '.join(names) or 'none pending'}")
-
-
-if __name__ == "__main__":
-    main()

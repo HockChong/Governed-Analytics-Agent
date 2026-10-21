@@ -32,7 +32,7 @@ down:
 	docker compose down
 
 migrate:
-	uv run python -m core.migrations
+	uv run python scripts/migrate.py
 
 # One-off copy of thelook_ecommerce. `make snapshot FORCE=1` overwrites an existing one.
 snapshot:

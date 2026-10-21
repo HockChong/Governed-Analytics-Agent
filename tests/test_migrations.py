@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from core.errors import MigrationError
 from core.migrations import MIGRATIONS_DIR, discover
 
 
@@ -13,14 +14,14 @@ def test_repo_migrations_are_well_formed() -> None:
 
 def test_bad_name_rejected(tmp_path: Path) -> None:
     (tmp_path / "init.sql").write_text("SELECT 1;")
-    with pytest.raises(ValueError, match="001_name.sql"):
+    with pytest.raises(MigrationError, match="001_name.sql"):
         discover(tmp_path)
 
 
 def test_duplicate_version_rejected(tmp_path: Path) -> None:
     (tmp_path / "001_a.sql").write_text("SELECT 1;")
     (tmp_path / "001_b.sql").write_text("SELECT 1;")
-    with pytest.raises(ValueError, match="duplicate"):
+    with pytest.raises(MigrationError, match="duplicate"):
         discover(tmp_path)
 
 

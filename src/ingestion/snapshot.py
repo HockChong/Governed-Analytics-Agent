@@ -5,18 +5,14 @@ dbt reads from a one-off copy instead. Uses copy and load jobs only: no SQL DDL/
 Refuses to touch an existing snapshot unless force=True.
 """
 
-import argparse
-import sys
 import uuid
-from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
 
-from core.bq import impersonated_client
-from core.config import Settings
+from core.errors import SnapshotError
 
 SOURCE_DATASET = "bigquery-public-data.thelook_ecommerce"
 TABLES = (
@@ -39,10 +35,6 @@ METADATA_SCHEMA = [
     bigquery.SchemaField("copy_job_id", "STRING", mode="REQUIRED"),
 ]
 LABELS = {"component": "snapshot"}
-
-
-class SnapshotError(RuntimeError):
-    pass
 
 
 @dataclass(frozen=True)
@@ -122,25 +114,3 @@ def snapshot(client: bigquery.Client, dataset: str, *, force: bool = False) -> l
         ),
     ).result()
     return results
-
-
-def main(argv: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--force", action="store_true", help="overwrite an existing snapshot")
-    args = parser.parse_args(argv)
-
-    settings = Settings()
-    if settings.dbt_impersonate_sa is None:
-        print("snapshot refused: DBT_IMPERSONATE_SA is not set", file=sys.stderr)
-        return 2
-    dataset = f"{settings.gcp_project_id}.{settings.snapshot_dataset}"
-    client = impersonated_client(settings.gcp_project_id, settings.dbt_impersonate_sa)
-    try:
-        results = snapshot(client, dataset, force=args.force)
-    except SnapshotError as exc:
-        print(f"snapshot refused: {exc}", file=sys.stderr)
-        return 1
-    print(f"snapshot of {SOURCE_DATASET} into {dataset}")
-    for r in results:
-        print(f"  {r.table_name:<22}{r.row_count:>12,} rows  (source {r.source_last_modified})")
-    return 0

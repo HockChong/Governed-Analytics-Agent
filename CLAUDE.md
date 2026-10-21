@@ -67,8 +67,10 @@ network access.
   boundary, trust inside.
 - Prefer Literal or Enum over free strings for fixed values.
 - Errors: raise specific exceptions defined in src/core/errors.py; never
-  bare `except`; never swallow errors. Expected failures (guard
-  rejection, timeout) are return values with an exit code, not exceptions.
+  bare `except`; never swallow errors. Expected failures on the request
+  path (guard, executor, orchestrator, API) are return values with an
+  exit code. CLI scripts may raise and map exceptions to process exit
+  codes.
 - Logging: structured logging via the standard logging module with a JSON
   formatter; include request_id; never log secrets, PII or result rows.
   No print() outside scripts/.
