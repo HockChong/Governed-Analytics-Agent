@@ -14,6 +14,11 @@ or API yet.
 
 | Date | Change | Commit |
 | --- | --- | --- |
+| 2026-10-20 | ADR-007: local dbt Core v1 and MetricFlow, no dbt Cloud | aaeee7c |
+| 2026-10-20 | Integration test: agent identity cannot create tables in BigQuery | 97c1589 |
+| 2026-10-21 | CLAUDE.md, architecture doc, minimal README | f467260 |
+| 2026-10-21 | Settings, local Postgres (compose), SQL migrations | a7e50fe |
+| 2026-10-21 | CLAUDE.md rewritten with session workflow and style rules | d6ff4a8 |
 | 2026-10-21 | Snapshot of thelook_ecommerce into `SNAPSHOT_DATASET`; dbt sources read it | b5d800e |
 | 2026-10-21 | `bq` / `integration` markers opt-in; `make test` deselects them | 24c7a84 |
 | 2026-10-21 | All config through `Settings`; integration tests use a `settings` fixture | a36dc20 |
@@ -29,10 +34,16 @@ Verification on 2026-10-21 (after ddccfda):
 | `make lint` | ruff clean; mypy strict "no issues found in 20 source files" |
 | `make test` | 37 passed, 4 deselected |
 | `make test-integration` | 4 passed, 37 deselected (live BigQuery and local Postgres) |
-| `make test` with every socket connect blocked and gcloud config empty | 32 passed, 4 deselected (run at 24c7a84) |
+| `make test` with every socket connect blocked and gcloud config empty | 37 passed, 4 deselected (re-run at 9aadad8) |
 
 ## Decisions
 
+- dbt Core v1.12 with local MetricFlow; no dbt Cloud (ADR-007).
+- GCP dev resources were created by hand on 2026-10-20 to unblock week 1:
+  project `governed-analytics-dev`, dataset `thelook_dbt` (US), service
+  accounts `dbt-runner` and `agent-readonly`, used through impersonation
+  with no key files. They are not in Terraform yet; import them in
+  Phase 3 rather than recreate them.
 - `bq` marks tests that need live BigQuery; `integration` marks tests that
   need local services (Postgres). `make test` runs
   `-m "not bq and not integration"` even when .env holds real credentials.
@@ -61,6 +72,12 @@ Verification on 2026-10-21 (after ddccfda):
 ## Next step
 
 Start Part C, beginning with descriptions in `dbt/models/sources.yml`.
+Part C is not defined in this repo; its scope comes from the user. Record
+it here when it starts. Remaining Phase 1 scope (architecture section 12):
+dbt models with 6–10 metrics, FastAPI `/ask`, naive retrieval, SQL
+generation, read-only execution through the guard, 50 golden questions
+(written by the user).
+
 Before that, optionally run `make snapshot` once (it refuses to touch an
 existing snapshot without `FORCE=1`) to confirm the refactored CLI still
 works.
@@ -69,6 +86,11 @@ works.
 
 - `AGENTS.md` (untracked) is a copy of the old CLAUDE.md and still says
   dbt reads the public dataset. Delete it or regenerate it from CLAUDE.md.
+- README.md is stale: it says dbt reads
+  `bigquery-public-data.thelook_ecommerce` and does not mention
+  `make test-integration` or `make snapshot`.
+- architecture.md section 11 summarises ADR-001 to ADR-006, but
+  `docs/adr/` holds only ADR-007.
 - `.claude/settings.json` (untracked) holds one-off permission entries
   from an earlier session.
 - No structured JSON logging yet; CLAUDE.md requires it once request-path
