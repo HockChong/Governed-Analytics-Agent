@@ -4,7 +4,7 @@ export
 PYTHONPATH := src
 DBT_DIRS = --project-dir dbt --profiles-dir dbt
 
-.PHONY: install test test-integration lint format up down migrate dbt-debug dbt-parse dbt-build
+.PHONY: install test test-integration lint format up down migrate snapshot dbt-debug dbt-parse dbt-build
 
 install:
 	uv sync
@@ -22,7 +22,7 @@ format:
 lint:
 	uv run ruff check .
 	uv run ruff format --check .
-	uv run mypy src tests
+	uv run mypy src tests scripts
 
 up:
 	docker compose up -d --wait
@@ -32,6 +32,10 @@ down:
 
 migrate:
 	uv run python -m core.migrations
+
+# One-off copy of thelook_ecommerce. `make snapshot FORCE=1` overwrites an existing one.
+snapshot:
+	uv run python scripts/snapshot.py $(if $(FORCE),--force,)
 
 dbt-debug:
 	uv run dbt debug $(DBT_DIRS)

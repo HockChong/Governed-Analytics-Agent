@@ -1,10 +1,12 @@
 version: 2
 
+# Reads the frozen snapshot made by scripts/snapshot.py, not the live public
+# dataset, which is regenerated over time.
 # Columns (and their pii: true tags) are added when staging models are built.
 sources:
   - name: thelook
-    database: bigquery-public-data
-    schema: thelook_ecommerce
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: "{{ env_var('SNAPSHOT_DATASET') }}"
     tables:
       - name: distribution_centers
       - name: events
