@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-Content tests/test_layout.py, tests/test_dbt_config.py, tests/integration/test_readonly_warehouse.py, .gitignore, .python-version; git status --short; uv --version; docker --version; docker compose version; Get-Content .env | ForEach-Object { \\($_ -split '='\\)[0] })",
+      "PowerShell(uv run python C:\\\\Users\\\\skych\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--dev-Governed-Analytics-Agent\\\\6fdd9fe1-db4f-4405-9c3d-812b2f4f9b49\\\\scratchpad\\\\a1_check.py; \\(Get-Date\\).ToUniversalTime\\(\\).ToString\\('u'\\))",
+      "Bash(uv run *)",
+      "Bash(git add *)",
+      "Bash(git commit -q -m 'docs\\(progress\\): add early history, ADR-007 and GCP decisions, gaps *)",
+      "Bash(timeout 120 make dbt-parse)",
+      "Bash(uv run python -I -c ' *)",
+      "Bash(make lint *)",
+      "Bash(make test *)",
+      "Bash(git commit -q -m 'feat\\(ingestion\\): profile snapshot tables without reading PII values *)"
+    ]
+  }
+}
