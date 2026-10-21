@@ -5,9 +5,9 @@ dbt reads from a one-off copy instead. Uses copy and load jobs only: no SQL DDL/
 Refuses to touch an existing snapshot unless force=True.
 """
 
-import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
@@ -59,8 +59,20 @@ def existing_targets(client: bigquery.Client, dataset: str) -> list[str]:
     return [name for name in names if _exists(client, f"{dataset}.{name}")]
 
 
-def snapshot(client: bigquery.Client, dataset: str, *, force: bool = False) -> list[TableSnapshot]:
-    """Copy every source table into `dataset` and record row counts in snapshot_metadata."""
+def snapshot(
+    client: bigquery.Client,
+    dataset: str,
+    *,
+    force: bool = False,
+    now: Callable[[], datetime],
+    new_id: Callable[[], str],
+) -> list[TableSnapshot]:
+    """Copy every source table into `dataset` and record row counts in snapshot_metadata.
+
+    Args:
+        now: Clock for snapshot_at; injected so tests can pin it.
+        new_id: Generator for snapshot_id; injected so tests can pin it.
+    """
     existing = existing_targets(client, dataset)
     if existing and not force:
         raise SnapshotError(
@@ -70,7 +82,7 @@ def snapshot(client: bigquery.Client, dataset: str, *, force: bool = False) -> l
         bigquery.WriteDisposition.WRITE_TRUNCATE if force else bigquery.WriteDisposition.WRITE_EMPTY
     )
 
-    snapshot_at = datetime.now(UTC)
+    snapshot_at = now()
     results: list[TableSnapshot] = []
     for name in TABLES:
         source_id = f"{SOURCE_DATASET}.{name}"
@@ -93,7 +105,7 @@ def snapshot(client: bigquery.Client, dataset: str, *, force: bool = False) -> l
             raise SnapshotError(f"{name}: BigQuery returned incomplete table metadata")
         results.append(TableSnapshot(name, before.modified, copied.num_rows, job.job_id))
 
-    snapshot_id = uuid.uuid4().hex
+    snapshot_id = new_id()
     rows = [
         {
             "snapshot_id": snapshot_id,

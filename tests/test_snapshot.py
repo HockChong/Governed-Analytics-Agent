@@ -16,6 +16,8 @@ from ingestion.snapshot import (
 
 DATASET = "test-project.test_snapshot"
 MODIFIED = datetime(2026, 10, 21, tzinfo=UTC)
+SNAPSHOT_AT = datetime(2026, 10, 21, 9, 30, tzinfo=UTC)
+SNAPSHOT_ID = "snapshot-0001"
 
 
 class _Job:
@@ -60,7 +62,15 @@ class FakeClient:
 
 
 def _run(client: FakeClient, force: bool = False) -> list[Any]:
-    return list(snapshot(cast(bigquery.Client, client), DATASET, force=force))
+    return list(
+        snapshot(
+            cast(bigquery.Client, client),
+            DATASET,
+            force=force,
+            now=lambda: SNAPSHOT_AT,
+            new_id=lambda: SNAPSHOT_ID,
+        )
+    )
 
 
 def test_copies_all_tables_and_records_metadata() -> None:
@@ -75,8 +85,24 @@ def test_copies_all_tables_and_records_metadata() -> None:
     assert dest == f"{DATASET}.{METADATA_TABLE}"
     assert disposition == "WRITE_EMPTY"
     assert [r["table_name"] for r in rows] == list(TABLES)
-    assert len({r["snapshot_id"] for r in rows}) == 1
-    assert len({r["snapshot_at"] for r in rows}) == 1
+
+
+def test_metadata_rows_use_injected_clock_and_id() -> None:
+    client = FakeClient()
+    _run(client)
+
+    (rows, _, _) = client.loads[0]
+    assert rows[0] == {
+        "snapshot_id": SNAPSHOT_ID,
+        "table_name": TABLES[0],
+        "source_table": f"{SOURCE_DATASET}.{TABLES[0]}",
+        "source_last_modified": "2026-10-21T00:00:00+00:00",
+        "row_count": 1,
+        "snapshot_at": "2026-10-21T09:30:00+00:00",
+        "copy_job_id": "copy-1",
+    }
+    assert {r["snapshot_id"] for r in rows} == {SNAPSHOT_ID}
+    assert {r["snapshot_at"] for r in rows} == {"2026-10-21T09:30:00+00:00"}
 
 
 @pytest.mark.parametrize("existing", [frozenset({"orders"}), frozenset({METADATA_TABLE})])

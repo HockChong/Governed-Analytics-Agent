@@ -6,7 +6,9 @@ Exit codes: 0 done, 1 snapshot refused or unverified, 2 configuration missing.
 
 import argparse
 import sys
+import uuid
 from collections.abc import Sequence
+from datetime import UTC, datetime
 
 from core.config import Settings
 from core.errors import SnapshotError
@@ -27,7 +29,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     dataset = f"{settings.gcp_project_id}.{settings.snapshot_dataset}"
     client = impersonated_client(settings.gcp_project_id, settings.dbt_impersonate_sa)
     try:
-        results = snapshot(client, dataset, force=args.force)
+        results = snapshot(
+            client,
+            dataset,
+            force=args.force,
+            now=lambda: datetime.now(UTC),
+            new_id=lambda: uuid.uuid4().hex,
+        )
     except SnapshotError as error:
         print(f"snapshot refused: {error}", file=sys.stderr)
         return 1
