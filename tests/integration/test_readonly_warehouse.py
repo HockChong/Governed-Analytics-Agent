@@ -14,7 +14,7 @@ from google.auth import impersonated_credentials
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import bigquery
 
-pytestmark = pytest.mark.integration
+pytestmark = pytest.mark.bq
 
 SCOPES = ["https://www.googleapis.com/auth/bigquery"]
 

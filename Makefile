@@ -9,11 +9,12 @@ DBT_DIRS = --project-dir dbt --profiles-dir dbt
 install:
 	uv sync
 
+# Deselects by marker, so it stays offline even when .env holds real credentials.
 test:
-	uv run pytest
+	uv run pytest -m "not bq and not integration"
 
 test-integration:
-	uv run pytest -m integration
+	uv run pytest -m "bq or integration"
 
 format:
 	uv run ruff format .

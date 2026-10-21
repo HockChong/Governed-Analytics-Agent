@@ -26,8 +26,12 @@ package = false
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+# A mistyped marker would otherwise silently run an opt-in test under `make test`.
+addopts = "--strict-markers"
+# Opt-in only: `make test` deselects both, `make test-integration` selects them.
 markers = [
-    "integration: needs live GCP credentials or local Postgres; skipped when absent",
+    "bq: needs live BigQuery (application-default credentials and impersonation)",
+    "integration: needs local services such as Postgres (`make up`)",
 ]
 
 [tool.ruff]

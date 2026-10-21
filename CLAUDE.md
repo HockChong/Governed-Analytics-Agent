@@ -32,9 +32,12 @@ either, stop and explain why first.
 
 ## Environment
 WSL2 Ubuntu, Docker Compose, uv, Python 3.12, dbt-bigquery.
-Common commands: make up | migrate | test | lint | dbt-build | eval | api
-Tests needing BigQuery are marked `bq` or `integration` and are opt-in;
-`make test` runs without network access.
+Common commands: make up | migrate | test | test-integration | lint |
+dbt-build. The `eval` and `api` targets are added in later steps.
+Tests needing BigQuery are marked `bq`; tests needing local services
+(Postgres) are marked `integration`. Both are opt-in via
+`make test-integration`; `make test` deselects them and runs without
+network access.
 
 ## How to work
 - Start of session: read CLAUDE.md and docs/progress.md, run
