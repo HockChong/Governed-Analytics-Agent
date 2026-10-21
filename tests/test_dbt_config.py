@@ -10,6 +10,7 @@ ENV_VAR_CALL = re.compile(r"env_var\(\s*['\"]([A-Z0-9_]+)['\"]")
 KEY_FILE_FIELDS = {"keyfile", "keyfile_json", "private_key", "private_key_id"}
 
 
+# Any: yaml.safe_load returns untyped nested data; the tests only index known keys.
 def _dev_output() -> dict[str, Any]:
     profiles = yaml.safe_load((DBT_DIR / "profiles.yml").read_text(encoding="utf-8"))
     output: dict[str, Any] = profiles["governed_analytics"]["outputs"]["dev"]

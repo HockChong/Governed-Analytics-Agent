@@ -1,6 +1,6 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
-from typing import Any, cast
+from typing import cast
 
 import pytest
 from google.cloud import bigquery
@@ -8,11 +8,16 @@ from google.cloud.exceptions import NotFound
 
 from core.errors import SnapshotError
 from ingestion.snapshot import (
+    METADATA_SCHEMA,
     METADATA_TABLE,
     SOURCE_DATASET,
     TABLES,
+    SnapshotMetadataRow,
+    TableSnapshot,
     snapshot,
 )
+
+JsonRow = dict[str, object]
 
 DATASET = "test-project.test_snapshot"
 MODIFIED = datetime(2026, 10, 21, tzinfo=UTC)
@@ -39,7 +44,7 @@ class FakeClient:
         for name in existing:
             self.tables[f"{DATASET}.{name}"] = SimpleNamespace(num_rows=0, modified=MODIFIED)
         self.copies: list[tuple[str, str, str]] = []
-        self.loads: list[tuple[list[dict[str, Any]], str, str]] = []
+        self.loads: list[tuple[list[JsonRow], str, str]] = []
         self.mutate_source_during_copy: str | None = None
 
     def get_table(self, table_id: str) -> SimpleNamespace:
@@ -51,17 +56,19 @@ class FakeClient:
         self.copies.append((source, dest, str(job_config.write_disposition)))
         self.tables[dest] = SimpleNamespace(num_rows=self.tables[source].num_rows)
         if source.endswith(f".{self.mutate_source_during_copy}"):
-            self.tables[source] = SimpleNamespace(num_rows=99, modified=datetime.now(UTC))
+            self.tables[source] = SimpleNamespace(
+                num_rows=99, modified=MODIFIED + timedelta(hours=1)
+            )
         return _Job(f"copy-{len(self.copies)}")
 
     def load_table_from_json(
-        self, rows: list[dict[str, Any]], dest: str, job_config: bigquery.LoadJobConfig
+        self, rows: list[JsonRow], dest: str, job_config: bigquery.LoadJobConfig
     ) -> _Job:
         self.loads.append((rows, dest, str(job_config.write_disposition)))
         return _Job("load-1")
 
 
-def _run(client: FakeClient, force: bool = False) -> list[Any]:
+def _run(client: FakeClient, force: bool = False) -> list[TableSnapshot]:
     return list(
         snapshot(
             cast(bigquery.Client, client),
@@ -103,6 +110,10 @@ def test_metadata_rows_use_injected_clock_and_id() -> None:
     }
     assert {r["snapshot_id"] for r in rows} == {SNAPSHOT_ID}
     assert {r["snapshot_at"] for r in rows} == {"2026-10-21T09:30:00+00:00"}
+
+
+def test_metadata_row_fields_match_bigquery_schema() -> None:
+    assert list(SnapshotMetadataRow.model_fields) == [field.name for field in METADATA_SCHEMA]
 
 
 @pytest.mark.parametrize("existing", [frozenset({"orders"}), frozenset({METADATA_TABLE})])
