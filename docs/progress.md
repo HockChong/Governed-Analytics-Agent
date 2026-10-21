@@ -71,12 +71,11 @@ Verification on 2026-10-21 (after ddccfda):
 
 ## Next step
 
-Start Part C, beginning with descriptions in `dbt/models/sources.yml`.
-Part C is not defined in this repo; its scope comes from the user. Record
-it here when it starts. Remaining Phase 1 scope (architecture section 12):
-dbt models with 6–10 metrics, FastAPI `/ask`, naive retrieval, SQL
-generation, read-only execution through the guard, 50 golden questions
-(written by the user).
+Step 1.1 in docs/build-plan.md (Part C start): profile the snapshot
+tables, then descriptions, columns and PII tags in
+`dbt/models/sources.yml`, then `stg_` models. Part C's full scope comes
+from the user; record it here when it starts. docs/build-plan.md lists
+the remaining steps for every phase, with model and prompt per step.
 
 Before that, optionally run `make snapshot` once (it refuses to touch an
 existing snapshot without `FORCE=1`) to confirm the refactored CLI still
