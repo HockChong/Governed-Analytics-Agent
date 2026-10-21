@@ -4,7 +4,6 @@ Runs only when POSTGRES_PASSWORD is set (e.g. via `make test` with .env and
 `make up`); otherwise skipped. Uses a throwaway database, dropped afterwards.
 """
 
-import os
 import uuid
 from collections.abc import Iterator
 
@@ -19,10 +18,9 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
-def empty_db() -> Iterator[psycopg.Connection]:
-    if not os.environ.get("POSTGRES_PASSWORD"):
+def empty_db(settings: Settings) -> Iterator[psycopg.Connection]:
+    if settings.postgres_password is None:
         pytest.skip("POSTGRES_PASSWORD not set")
-    settings = Settings(env="test")
     name = f"migration_test_{uuid.uuid4().hex[:8]}"
     with psycopg.connect(settings.postgres_conninfo(), autocommit=True) as admin:
         admin.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name)))

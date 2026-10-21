@@ -73,7 +73,8 @@ network access.
   formatter; include request_id; never log secrets, PII or result rows.
   No print() outside scripts/.
 - Config only through src/core/config.py (pydantic-settings). No
-  os.environ reads elsewhere.
+  os.environ reads elsewhere. Tests get configuration through a
+  Settings fixture, never os.environ.
 - Prompts live in src/core/prompts/ as versioned files, never inline
   strings.
 - Naming: snake_case functions and modules, PascalCase classes,

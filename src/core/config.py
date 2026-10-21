@@ -19,6 +19,8 @@ class Settings(BaseSettings):
 
     gcp_project_id: str = "governed-analytics-dev"
     bq_dataset: str = "thelook_dbt"
+    snapshot_dataset: str = "thelook_snapshot"
+    dbt_impersonate_sa: str | None = None
     agent_impersonate_sa: str | None = None
 
     # 127.0.0.1, not localhost: on Windows "localhost" tries ::1 first, which hangs

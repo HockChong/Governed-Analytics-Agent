@@ -1,10 +1,9 @@
 """The agent's warehouse identity must not be able to write.
 
-Runs only when GCP_PROJECT_ID and AGENT_IMPERSONATE_SA are set and
+Runs only when AGENT_IMPERSONATE_SA is set and
 application-default credentials exist; otherwise skipped (e.g. in CI).
 """
 
-import os
 import uuid
 
 import google.auth
@@ -14,17 +13,19 @@ from google.auth import impersonated_credentials
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import bigquery
 
+from core.config import Settings
+
 pytestmark = pytest.mark.bq
 
 SCOPES = ["https://www.googleapis.com/auth/bigquery"]
 
 
 @pytest.fixture(scope="module")
-def agent_client() -> bigquery.Client:
-    project = os.environ.get("GCP_PROJECT_ID")
-    target = os.environ.get("AGENT_IMPERSONATE_SA")
-    if not project or not target:
-        pytest.skip("GCP_PROJECT_ID / AGENT_IMPERSONATE_SA not set")
+def agent_client(settings: Settings) -> bigquery.Client:
+    project = settings.gcp_project_id
+    target = settings.agent_impersonate_sa
+    if target is None:
+        pytest.skip("AGENT_IMPERSONATE_SA not set")
     try:
         source, _ = google.auth.default(scopes=SCOPES)
     except DefaultCredentialsError:
@@ -44,8 +45,7 @@ def test_agent_can_read_public_dataset(agent_client: bigquery.Client) -> None:
     assert job.total_bytes_processed is not None
 
 
-def test_agent_cannot_create_table(agent_client: bigquery.Client) -> None:
-    dataset = os.environ.get("BQ_DATASET", "thelook_dbt")
-    table = f"{dataset}.readonly_probe_{uuid.uuid4().hex[:8]}"
+def test_agent_cannot_create_table(agent_client: bigquery.Client, settings: Settings) -> None:
+    table = f"{settings.bq_dataset}.readonly_probe_{uuid.uuid4().hex[:8]}"
     with pytest.raises(Forbidden, match="bigquery.tables.create"):
         agent_client.query(f"CREATE TABLE {table} AS SELECT 1 AS x").result()  # noqa: S608

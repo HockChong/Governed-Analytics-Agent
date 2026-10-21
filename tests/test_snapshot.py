@@ -14,7 +14,7 @@ from ingestion.snapshot import (
     snapshot,
 )
 
-DATASET = "proj.thelook_snapshot"
+DATASET = "test-project.test_snapshot"
 MODIFIED = datetime(2026, 10, 21, tzinfo=UTC)
 
 

@@ -6,7 +6,6 @@ Refuses to touch an existing snapshot unless force=True.
 """
 
 import argparse
-import os
 import sys
 import uuid
 from collections.abc import Sequence
@@ -17,6 +16,7 @@ from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
 
 from core.bq import impersonated_client
+from core.config import Settings
 
 SOURCE_DATASET = "bigquery-public-data.thelook_ecommerce"
 TABLES = (
@@ -129,9 +129,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--force", action="store_true", help="overwrite an existing snapshot")
     args = parser.parse_args(argv)
 
-    project = os.environ["GCP_PROJECT_ID"]
-    dataset = f"{project}.{os.environ.get('SNAPSHOT_DATASET', 'thelook_snapshot')}"
-    client = impersonated_client(project, os.environ["DBT_IMPERSONATE_SA"])
+    settings = Settings()
+    if settings.dbt_impersonate_sa is None:
+        print("snapshot refused: DBT_IMPERSONATE_SA is not set", file=sys.stderr)
+        return 2
+    dataset = f"{settings.gcp_project_id}.{settings.snapshot_dataset}"
+    client = impersonated_client(settings.gcp_project_id, settings.dbt_impersonate_sa)
     try:
         results = snapshot(client, dataset, force=args.force)
     except SnapshotError as exc:
